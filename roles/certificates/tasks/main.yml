@@ -1,0 +1,30 @@
+---
+- name: Установка Certbot и его зависимостей
+  apt:
+    name:
+      - certbot
+      - python3-certbot-nginx
+    state: present
+
+- name: Получение SSL-сертификатов для сайтов
+  command: >
+    certbot --nginx -d {{ item.domain }} -d www.{{ item.domain }} 
+    --non-interactive --agree-tos --email {{ item.email }}
+  loop: "{{ sites }}"
+  ignore_errors: yes
+
+
+- name: Настройка конфигурации Nginx для сайтов с SSL
+  template:
+    src: site.conf.j2
+    dest: "/etc/nginx/sites-available/{{ item.domain }}"
+    mode: '0644'
+  loop: "{{ sites }}"
+
+- name: Активация сайтов Nginx
+  file:
+    src: "/etc/nginx/sites-available/{{ item.domain }}"
+    dest: "/etc/nginx/sites-enabled/{{ item.domain }}"
+    state: link
+  loop: "{{ sites }}"
+  notify: Перезагрузить Nginx

@@ -1,0 +1,12 @@
+---
+- name: Установка Nginx
+  apt:
+    name: nginx
+    state: present
+
+- name: Настройка конфигурации Nginx для сайтов без SSL
+  template:
+    src: no_ssl_site.conf.j2
+    dest: "/etc/nginx/sites-available/{{ item.domain }}"
+    mode: '0644'
+  loop: "{{ sites }}"
